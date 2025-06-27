@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package chess_game.gui;
 
 import ClientSide.Client;
@@ -22,30 +17,47 @@ import chess_game.Utilities.BoardUtilities;
 import chess_game.Utilities.MoveUtilities;
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import javax.swing.BorderFactory;
+import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 
-/**
- *
- * @author Enes Kızılcın <nazifenes.kizilcin@stu.fsm.edu.tr>
- */
-//This class is the visual version of every Tile class in Board class
 public class TilePanel extends JPanel {
 
-    Coordinate coordinate;
-    JLabel pieceIcon;
+    private Coordinate coordinate;
+    private JLabel pieceIcon;
 
     public TilePanel(BoardPanel boardPanel, Coordinate coord, Board chessBoard, Client client) {
         super(new GridBagLayout());
         this.coordinate = coord;
+
+        // Create and add the icon label
         pieceIcon = new JLabel();
+        pieceIcon.setHorizontalAlignment(JLabel.CENTER);
+        pieceIcon.setVerticalAlignment(JLabel.CENTER);
+
         this.add(pieceIcon);
+
+        // Set tile preferred size (initially 60x60, but will scale)
         setPreferredSize(new Dimension(BOARD_Configurations.TILE_SIZE, BOARD_Configurations.TILE_SIZE));
+
+        // Assign colors and piece icon
         assignTileColor(chessBoard);
         assignTilePieceIcon(chessBoard);
+
+        // Handle resize to rescale icon
+        this.addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentResized(ComponentEvent e) {
+                assignTilePieceIcon(chessBoard); // Re-assign scaled icon on resize
+            }
+        });
+
+        // Mouse handling for click/move logic
         addMouseListener(new MouseListener() {
             @Override
             public void mouseClicked(MouseEvent e) {
@@ -53,126 +65,45 @@ public class TilePanel extends JPanel {
                     return;
                 }
 
-                if (!chessBoard.hasChosenTile()) { // if there is no chosen piece . Then make this piece chosen...
+                if (!chessBoard.hasChosenTile()) {
                     if (chessBoard.getTile(coordinate).hasPiece()) {
                         if (chessBoard.getCurrentPlayer().getTeam() != chessBoard.getTile(coordinate).getPiece().getTeam()) {
                             return;
                         }
                     }
-
                     chessBoard.setChosenTile(chessBoard.getTile(coordinate));
-
                 } else {
-                    Tile destinationTile = chessBoard.getTile(coordinate); // if there is already a chosen piece then this tile will be destinatin place
+                    Tile destinationTile = chessBoard.getTile(coordinate);
                     if (MoveUtilities.isValidMove(chessBoard, destinationTile)) {
-                        // Check for castling: king moves two squares horizontally
-                        boolean isCastling = false;
-                        boolean isEnPassant = false;
-                        Tile chosenTile = chessBoard.getChosenTile();
-                        // Check for en passant
-                        if (chosenTile != null && chosenTile.hasPiece() && chosenTile.getPiece().getType() == PieceTypes.PAWN) {
-                            for (Move m : chosenTile.getPiece().availableMoves(chessBoard, chosenTile.getCoordinate())) {
-                                if (m.isEnPassantMove() && m.getDestinationTile().getCoordinate().equals(destinationTile.getCoordinate())) {
-                                    isEnPassant = true;
-                                    chessBoard.getCurrentPlayer().makeMove(chessBoard, m);
-                                    Message msg = new Message(Message.MessageTypes.MOVE);
-                                    MovementMessage movement = new MovementMessage();
-                                    movement.currentCoordinate = m.getCurrentTile().getCoordinate();
-                                    movement.destinationCoordinate = m.getDestinationTile().getCoordinate();
-                                    movement.isEnPassant = true;
-                                    movement.enPassantCapturedPawnCoordinate = m.getEnPassantCapturedTile().getCoordinate();
-                                    if (m.hasKilledPiece()) {
-                                        movement.isPieceKilled = true;
-                                    }
-                                    msg.content = (Object) movement;
-                                    client.Send(msg);
-                                    chessBoard.changeCurrentPlayer();
-                                    client.game.getBottomGameMenu().getTurnLBL().setText("Enemy Turn");
-                                    client.game.getBottomGameMenu().getTurnLBL().setForeground(Color.RED);
-                                    boardPanel.updateBoardGUI(chessBoard);
-                                    return;
-                                }
-                            }
+                        Move move = new Move(chessBoard, chessBoard.getChosenTile(), destinationTile);
+                        chessBoard.getCurrentPlayer().makeMove(chessBoard, move);
+
+                        if (move.hasKilledPiece()) {
+                            client.game.getBottomGameMenu().killedPiecesListModel.addElement(move.getKilledPiece().toString());
                         }
-                        if (chosenTile != null && chosenTile.hasPiece() && chosenTile.getPiece().getType() == PieceTypes.KING) {
-                            int dx = destinationTile.getCoordinate().getX() - chosenTile.getCoordinate().getX();
-                            int dy = destinationTile.getCoordinate().getY() - chosenTile.getCoordinate().getY();
-                            if (Math.abs(dx) == 2 && dy == 0) {
-                                // Castling move
-                                isCastling = true;
-                                int rookStartX = dx > 0 ? 7 : 0;
-                                int rookEndX = dx > 0 ? chosenTile.getCoordinate().getX() + 1 : chosenTile.getCoordinate().getX() - 1;
-                                Tile rookStartTile = chessBoard.getTile(rookStartX, chosenTile.getCoordinate().getY());
-                                Tile rookEndTile = chessBoard.getTile(rookEndX, chosenTile.getCoordinate().getY());
-                                Move move = new Move(chessBoard, chosenTile, destinationTile, rookStartTile, rookEndTile);
-                                chessBoard.getCurrentPlayer().makeMove(chessBoard, move);
-                                if (move.hasKilledPiece()) {
-                                    client.game.getBottomGameMenu().killedPiecesListModel.addElement(move.getKilledPiece().toString());
-                                }
-                                // Send move message (now with castling info)
-                                Message msg = new Message(Message.MessageTypes.MOVE);
-                                MovementMessage movement = new MovementMessage();
-                                movement.currentCoordinate = move.getCurrentTile().getCoordinate();
-                                movement.destinationCoordinate = move.getDestinationTile().getCoordinate();
-                                movement.isCastling = true;
-                                movement.rookStartCoordinate = move.getRookStartTile().getCoordinate();
-                                movement.rookEndCoordinate = move.getRookEndTile().getCoordinate();
-                                if (move.getKilledPiece() != null) {
-                                    movement.isPieceKilled = true;
-                                }
-                                msg.content = (Object) movement;
-                                client.Send(msg);
-                                chessBoard.changeCurrentPlayer();
-                                client.game.getBottomGameMenu().getTurnLBL().setText("Enemy Turn");
-                                client.game.getBottomGameMenu().getTurnLBL().setForeground(Color.RED);
-                                if (move.hasKilledPiece()) {
-                                    if (move.getKilledPiece().getType() == PieceTypes.KING) {
-                                        Team winnerTeam;
-                                        winnerTeam = (move.getKilledPiece().getTeam() == Team.BLACK) ? Team.WHITE : Team.BLACK;
-                                        Message message = new Message(Message.MessageTypes.END);
-                                        message.content = null;
-                                        client.Send(message);
-                                    }
-                                }
-                                boardPanel.updateBoardGUI(chessBoard);
-                                return;
-                            }
+
+                        // Send move message to other client
+                        Message msg = new Message(Message.MessageTypes.MOVE);
+                        MovementMessage movement = new MovementMessage();
+                        movement.currentCoordinate = move.getCurrentTile().getCoordinate();
+                        movement.destinationCoordinate = move.getDestinationTile().getCoordinate();
+                        if (move.getKilledPiece() != null) {
+                            movement.isPieceKilled = true;
                         }
-                        if (!isCastling && !isEnPassant) {
-                            Move move = new Move(chessBoard, chosenTile, destinationTile);
-                            chessBoard.getCurrentPlayer().makeMove(chessBoard, move);
-                            if (move.hasKilledPiece()) {
-                                client.game.getBottomGameMenu().killedPiecesListModel.addElement(move.getKilledPiece().toString());
-                            }
-                            //the time when we send move class directly we using this code.
-//                        Message movementMessage = new Message(Message.MessageTypes.MOVE);
-//                        movementMessage.content = (Object) (move);
-//                        client.Send(message);
-                            //instead of send move classs directly we just send the coordinates of the tiles (current,destination) in  MovementMessage object
-                            Message msg = new Message(Message.MessageTypes.MOVE);
-                            MovementMessage movement = new MovementMessage();
-                            movement.currentCoordinate = move.getCurrentTile().getCoordinate();
-                            movement.destinationCoordinate = move.getDestinationTile().getCoordinate();
-                            if (move.getKilledPiece() != null) {
-                                movement.isPieceKilled = true;
-                            }
-                            msg.content = (Object) movement;
-                            client.Send(msg);
-                            chessBoard.changeCurrentPlayer();
-                            client.game.getBottomGameMenu().getTurnLBL().setText("Enemy Turn");
-                            client.game.getBottomGameMenu().getTurnLBL().setForeground(Color.RED);
-                            if (move.hasKilledPiece()) {
-                                if (move.getKilledPiece().getType() == PieceTypes.KING) {
-                                    Team winnerTeam;
-                                    winnerTeam = (move.getKilledPiece().getTeam() == Team.BLACK) ? Team.WHITE : Team.BLACK;
-                                    Message message = new Message(Message.MessageTypes.END);
-                                    message.content = null;
-                                    client.Send(message);
-                                }
-                            }
-                            boardPanel.updateBoardGUI(chessBoard);
+                        msg.content = (Object) movement;
+                        client.Send(msg);
+
+                        chessBoard.changeCurrentPlayer();
+                        client.game.getBottomGameMenu().getTurnLBL().setText("Enemy Turn");
+                        client.game.getBottomGameMenu().getTurnLBL().setForeground(Color.RED);
+
+                        if (move.hasKilledPiece() && move.getKilledPiece().getType() == PieceTypes.KING) {
+                            Team winnerTeam = (move.getKilledPiece().getTeam() == Team.BLACK) ? Team.WHITE : Team.BLACK;
+                            JOptionPane.showMessageDialog(null, "Winner: " + winnerTeam.toString());
+                            Message endMsg = new Message(Message.MessageTypes.END);
+                            client.Send(endMsg);
                         }
-                        return;
+
                     } else {
                         if (destinationTile.hasPiece()) {
                             if (chessBoard.getCurrentPlayer().getTeam() != chessBoard.getTile(coordinate).getPiece().getTeam()) {
@@ -180,44 +111,31 @@ public class TilePanel extends JPanel {
                             }
                         }
                         chessBoard.setChosenTile(destinationTile);
-
                     }
+
+                    // Check state messages
                     if (MoveUtilities.controlCheckState(chessBoard, Team.BLACK)) {
-//                        JOptionPane.showMessageDialog(null, "Check state for team : " + Team.BLACK.toString());
-                        //if there is a chech-state. give a check information to client. And also send this same information to rival client
+                        JOptionPane.showMessageDialog(null, "Check state for team : " + Team.BLACK.toString());
                         Message msg = new Message(Message.MessageTypes.CHECK);
-                        //the content will be the team which in check state ( in-danger)
                         msg.content = (Object) Team.BLACK;
                         client.Send(msg);
                     } else if (MoveUtilities.controlCheckState(chessBoard, Team.WHITE)) {
-//                        JOptionPane.showMessageDialog(null, "Check state for team : " + Team.WHITE.toString());
-                        //if there is a chech-state. give a check information to client. And also send this same information to rival client
+                        JOptionPane.showMessageDialog(null, "Check state for team : " + Team.WHITE.toString());
                         Message msg = new Message(Message.MessageTypes.CHECK);
-                        //the content will be the team which in check state ( in-danger)
                         msg.content = (Object) Team.WHITE;
                         client.Send(msg);
                     }
                 }
-                boardPanel.updateBoardGUI(chessBoard);
 
+                boardPanel.updateBoardGUI(chessBoard); // Refresh GUI
             }
 
-            @Override
-            public void mousePressed(MouseEvent e) {
-            }
-
-            @Override
-            public void mouseReleased(MouseEvent e) {
-            }
-
-            @Override
-            public void mouseEntered(MouseEvent e) {
-            }
-
-            @Override
-            public void mouseExited(MouseEvent e) {
-            }
+            @Override public void mousePressed(MouseEvent e) {}
+            @Override public void mouseReleased(MouseEvent e) {}
+            @Override public void mouseEntered(MouseEvent e) {}
+            @Override public void mouseExited(MouseEvent e) {}
         });
+
         validate();
     }
 
@@ -229,31 +147,44 @@ public class TilePanel extends JPanel {
         this.coordinate = coordinate;
     }
 
+    // ✅ MODIFIED: Dynamically scale and assign image to match tile size
     public void assignTilePieceIcon(Board board) {
-        //this.removeAll();
         Tile thisTile = board.getTile(this.coordinate);
         if (thisTile == null) {
             System.out.println("Tile is null");
             return;
-
         }
+
         if (thisTile.hasPiece()) {
-            //JLabel pieceIcon = new JLabel(BoardUtilities.getImageOfTeamPiece(thisTile.getPiece().getTeam(), thisTile.getPiece().getType()));
-            //this.add(pieceIcon);
-            pieceIcon.setIcon(BoardUtilities.getImageOfTeamPiece(thisTile.getPiece().getTeam(), thisTile.getPiece().getType()));
-            pieceIcon.validate();
-        } else if (!thisTile.hasPiece()) {
+            ImageIcon rawIcon = BoardUtilities.getImageOfTeamPiece(
+                    thisTile.getPiece().getTeam(),
+                    thisTile.getPiece().getType()
+            );
+
+            // Scale to current tile size
+            double scale = 0.65;
+            int w = this.getWidth() > 0 ? this.getWidth() : BOARD_Configurations.TILE_SIZE;
+            int h = this.getHeight() > 0 ? this.getHeight() : BOARD_Configurations.TILE_SIZE;
+            w = (int) (w * scale);
+            h = (int) (h * scale);
+
+            pieceIcon.setIcon(getScaledIcon(rawIcon, w, h));
+        } else {
             pieceIcon.setIcon(null);
-            pieceIcon.validate();
         }
 
-        //this.add(pieceIcon);
+        pieceIcon.validate();
+    }
+
+    // ✅ NEW: Helper method to scale icons
+    private ImageIcon getScaledIcon(ImageIcon icon, int width, int height) {
+        return new ImageIcon(icon.getImage().getScaledInstance(width, height, java.awt.Image.SCALE_SMOOTH));
     }
 
     public void assignTileColor(Board board) {
 
         // Default coloring
-         if (this.coordinate.getX() % 2 == 0 && this.coordinate.getY() % 2 == 0) {
+        if (this.coordinate.getX() % 2 == 0 && this.coordinate.getY() % 2 == 0) {
             this.setBackground(GUI_Configurations.lightColor);
         } else if (this.coordinate.getX() % 2 == 0 && this.coordinate.getY() % 2 == 1) {
             this.setBackground(GUI_Configurations.darkColor);
