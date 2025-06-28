@@ -17,6 +17,7 @@ import java.awt.Color;
 import java.awt.GridLayout;
 import java.awt.event.MouseListener;
 import java.util.List;
+import java.awt.Dimension;
 
 /**
  *
@@ -44,6 +45,8 @@ public class BoardPanel extends JPanel {
                 add(tilePanel);
             }
         }
+        this.revalidate();
+        this.repaint();
     }
 
     /**
@@ -97,5 +100,24 @@ public class BoardPanel extends JPanel {
 
     public boolean isBoardRotated() {
         return isBoardRotated;
+    }
+
+    @Override
+    public Dimension getPreferredSize() {
+        // Fetch parent window size
+        Dimension screenSize = getParent().getSize();
+
+        // Calculate usable width and height (subtract any fixed UI like menus)
+        int usableWidth = screenSize.width;
+        int usableHeight = screenSize.height-20; // subtract header/menu bar height
+
+        // Use the smaller of width or height to preserve square shape
+        int boardSize = Math.min(usableWidth, usableHeight);
+
+        // Cap the maximum size
+        int maxBoardSize = 1000; // Max size in pixels
+        boardSize = Math.min(boardSize, maxBoardSize);
+
+        return new Dimension(boardSize, boardSize);
     }
 }
