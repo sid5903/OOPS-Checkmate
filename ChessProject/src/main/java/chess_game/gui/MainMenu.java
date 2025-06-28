@@ -5,6 +5,9 @@ import javax.swing.JLabel;
 import javax.swing.JTextField;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.awt.image.BufferedImage;
+import javax.imageio.ImageIO;
+import java.io.IOException;
 
 public class MainMenu extends javax.swing.JPanel {
 
@@ -17,7 +20,24 @@ public class MainMenu extends javax.swing.JPanel {
     private javax.swing.JLabel playerNameLBL;
 
     public MainMenu() {
+        // Load background image
+        try {
+            backgroundImage = ImageIO.read(getClass().getClassLoader()
+                    .getResourceAsStream("chess_game/Img/Main_menu_bgd_logo.png"));
+        } catch (IOException | IllegalArgumentException e) {
+            System.err.println("Failed to load background image: " + e.getMessage());
+        }
+
         initComponents();
+    }
+
+    @Override
+    protected void paintComponent(Graphics g) {
+        super.paintComponent(g);
+        // Draw background image scaled to panel size
+        if (backgroundImage != null) {
+            g.drawImage(backgroundImage, 0, 0, getWidth(), getHeight(), this);
+        }
     }
 
     public JButton getExitBTN() {
@@ -66,6 +86,7 @@ public class MainMenu extends javax.swing.JPanel {
 
         infoLBL.setText("Matching");
         infoLBL.setVisible(false);
+        playerNameLBL.setForeground(Color.WHITE);
         playerNameLBL.setText("Enter your name:");
         playerNameTXT.setText("Player");
 
