@@ -8,6 +8,8 @@ import java.awt.event.KeyListener;
 import java.awt.image.BufferedImage;
 import javax.imageio.ImageIO;
 import java.io.IOException;
+import java.awt.Color;
+import java.awt.Graphics;
 
 public class MainMenu extends javax.swing.JPanel {
 
@@ -18,6 +20,7 @@ public class MainMenu extends javax.swing.JPanel {
     private javax.swing.JButton loadGameBTN; // Load game button
     private javax.swing.JTextField playerNameTXT;
     private javax.swing.JLabel playerNameLBL;
+    private BufferedImage backgroundImage;
 
     public MainMenu() {
         // Load background image
