@@ -162,13 +162,12 @@ public class TilePanel extends JPanel {
             );
 
             // Scale to current tile size
-            double scale = 0.65;
+            double scale = 0.7;
             int w = this.getWidth() > 0 ? this.getWidth() : BOARD_Configurations.TILE_SIZE;
             int h = this.getHeight() > 0 ? this.getHeight() : BOARD_Configurations.TILE_SIZE;
-            w = (int) (w * scale);
-            h = (int) (h * scale);
+            int size = (int) (Math.min(w, h) * scale) ;
 
-            pieceIcon.setIcon(getScaledIcon(rawIcon, w, h));
+            pieceIcon.setIcon(getScaledIcon(rawIcon, size, size));
         } else {
             pieceIcon.setIcon(null);
         }
@@ -213,5 +212,15 @@ public class TilePanel extends JPanel {
         }
 
         this.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+    }
+
+    @Override
+    public Dimension getPreferredSize() {
+        // Ensure square size based on current width or height
+        int size = Math.min(getWidth(), getHeight());
+        if (size == 0) {
+            size = BOARD_Configurations.TILE_SIZE; // fallback default
+        }
+        return new Dimension(size, size);
     }
 }
