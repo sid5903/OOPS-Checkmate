@@ -41,7 +41,7 @@ public class Table {
         this.client = new Client(this);
         this.client.Connect("172.20.32.65", 4000);
         if (this.client.socket == null) {
-            JOptionPane.showMessageDialog(null, "Servera bağlanılamadı");
+            JOptionPane.showMessageDialog(null, "Failed to connect to Active Directory server");
             System.exit(0);
         }
         createMainMenu();
@@ -200,15 +200,30 @@ public class Table {
         setupChatHandlers();
         
         if(this.client.getTeam() == Team.WHITE) {
-            this.bottomGameMenu.getTurnLBL().setText("Your Turn");
+            this.bottomGameMenu.getTurnLBL().setText("");
             this.bottomGameMenu.getTurnLBL().setForeground(Color.GREEN);
         } else {
-            this.bottomGameMenu.getTurnLBL().setText("Enemy Turn");
+            this.bottomGameMenu.getTurnLBL().setText("");
             this.bottomGameMenu.getTurnLBL().setForeground(Color.RED);
         }    
         
-        this.gameFrame.add(this.boardPanel, BorderLayout.CENTER);
+        JPanel boardWrapper = new JPanel(new java.awt.FlowLayout(java.awt.FlowLayout.CENTER));
+        boardWrapper.setBackground(new Color(15, 15, 15));
+        boardWrapper.setBorder(javax.swing.BorderFactory.createEmptyBorder(5, 0, 0, 0)); // Top offset: 100px
+        boardWrapper.add(this.boardPanel);
+
+        this.gameFrame.addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentResized(ComponentEvent e) {
+                boardPanel.revalidate();
+                boardPanel.repaint();
+            }
+        });
+
+        // ✅ Add wrapped board and bottom menu to the frame
+        this.gameFrame.add(boardWrapper, BorderLayout.CENTER);
         this.gameFrame.add(this.bottomGameMenu, BorderLayout.PAGE_END);
+
         this.gameFrame.revalidate();
         this.gameFrame.repaint();
         this.gameFrame.setVisible(true);
