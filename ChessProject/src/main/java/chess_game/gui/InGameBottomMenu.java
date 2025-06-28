@@ -144,14 +144,14 @@ public class InGameBottomMenu extends javax.swing.JPanel {
         
         // Quit game button setup
         quitGameBTN.setText("Quit Game");
-        quitGameBTN.setBackground(new java.awt.Color(220, 53, 69)); // Red background
-        quitGameBTN.setForeground(new java.awt.Color(255, 255, 255)); // White text
+        quitGameBTN.setBackground(new java.awt.Color(15, 15, 15)); 
+        quitGameBTN.setForeground(new java.awt.Color(220, 53, 69)); 
         quitGameBTN.setFont(new java.awt.Font("Segoe UI", 1, 12)); // Bold font
         
         // Save game button setup
         saveGameBTN.setText("Save Game");
-        saveGameBTN.setBackground(new java.awt.Color(40, 167, 69)); // Green background
-        saveGameBTN.setForeground(new java.awt.Color(255, 255, 255)); // White text
+        saveGameBTN.setBackground(new java.awt.Color(15, 15, 15)); 
+        saveGameBTN.setForeground(new java.awt.Color(15, 15, 15)); 
         saveGameBTN.setFont(new java.awt.Font("Segoe UI", 1, 12)); // Bold font
         
         // Style chat list
@@ -218,5 +218,7 @@ public class InGameBottomMenu extends javax.swing.JPanel {
                         .addGap(0, 0, Short.MAX_VALUE)))
                 .addGap(17, 17, 17))
         );
+        quitGameBTN.setOpaque(true);
+        saveGameBTN.setOpaque(true);
     }
 }
