@@ -3,13 +3,16 @@ package chess_game.gui;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JTextField;
+import javax.swing.JPanel;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.image.BufferedImage;
 import javax.imageio.ImageIO;
 import java.io.IOException;
-import java.awt.Color;
-import java.awt.Graphics;
+import java.awt.*;
+
 
 public class MainMenu extends javax.swing.JPanel {
 
@@ -74,26 +77,17 @@ public class MainMenu extends javax.swing.JPanel {
 
     @SuppressWarnings("unchecked")
     private void initComponents() {
-        playBTN = new javax.swing.JButton();
-        selectPlayerBTN = new javax.swing.JButton();
-        exitBTN = new javax.swing.JButton();
-        infoLBL = new javax.swing.JLabel();
-        playerNameLBL = new javax.swing.JLabel();
-        playerNameTXT = new javax.swing.JTextField();
-        loadGameBTN = new javax.swing.JButton();
+        playBTN = new JButton("Quick Match");
+        selectPlayerBTN = new JButton("Select Player");
+        exitBTN = new JButton("Exit");
+        loadGameBTN = new JButton("Load Game");
+        infoLBL = new JLabel("Matching");
+        playerNameLBL = new JLabel("Enter your name:");
+        playerNameTXT = new JTextField("Player", 15);
 
-        playBTN.setText("Quick Match");
-        selectPlayerBTN.setText("Select Player");
-        exitBTN.setText("Exit");
-        loadGameBTN.setText("Load Game");
-
-        infoLBL.setText("Matching");
         infoLBL.setVisible(false);
         playerNameLBL.setForeground(Color.WHITE);
-        playerNameLBL.setText("Enter your name:");
-        playerNameTXT.setText("Player");
 
-        // Add Enter key support for name field
         playerNameTXT.addKeyListener(new KeyListener() {
             @Override
             public void keyPressed(KeyEvent e) {
@@ -101,50 +95,32 @@ public class MainMenu extends javax.swing.JPanel {
                     playBTN.doClick();
                 }
             }
-            
-            @Override
-            public void keyTyped(KeyEvent e) {}
-            
-            @Override
-            public void keyReleased(KeyEvent e) {}
+
+            @Override public void keyTyped(KeyEvent e) {}
+            @Override public void keyReleased(KeyEvent e) {}
         });
 
-        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
-        this.setLayout(layout);
-        layout.setHorizontalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addGap(150, 150, 150)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addComponent(playerNameLBL)
-                    .addComponent(playerNameTXT, javax.swing.GroupLayout.DEFAULT_SIZE, 150, Short.MAX_VALUE)
-                    .addComponent(playBTN, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(selectPlayerBTN, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(loadGameBTN, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(exitBTN, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addGap(40, 40, 40)
-                .addComponent(infoLBL)
-                .addContainerGap(134, Short.MAX_VALUE))
-        );
-        layout.setVerticalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                .addGap(80, 80, 80)
-                .addComponent(playerNameLBL)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(playerNameTXT, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(18, 18, 18)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(playBTN)
-                    .addComponent(infoLBL))
-                .addGap(10, 10, 10)
-                .addComponent(selectPlayerBTN)
-                .addGap(10, 10, 10)
-                .addComponent(loadGameBTN)
-                .addGap(10, 10, 10)
-                .addComponent(exitBTN)
-                .addContainerGap(120, Short.MAX_VALUE))
-        );
+        // Panel to hold all the form controls
+        JPanel centerPanel = new JPanel();
+        centerPanel.setOpaque(false); // Let background show through
+        centerPanel.setLayout(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(10, 10, 10, 10);
+        gbc.gridx = 0;
+        gbc.anchor = GridBagConstraints.CENTER;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+
+        gbc.gridy = 0; centerPanel.add(playerNameLBL, gbc);
+        gbc.gridy = 1; centerPanel.add(playerNameTXT, gbc);
+        gbc.gridy = 2; centerPanel.add(playBTN, gbc);
+        gbc.gridy = 3; centerPanel.add(selectPlayerBTN, gbc);
+        gbc.gridy = 4; centerPanel.add(loadGameBTN, gbc);
+        gbc.gridy = 5; centerPanel.add(exitBTN, gbc);
+        gbc.gridy = 6; centerPanel.add(infoLBL, gbc);
+
+        // Add the center panel using BorderLayout.CENTER
+        setLayout(new BorderLayout());
+        add(centerPanel, BorderLayout.CENTER);
     }
 
     private void exitBTNActionPerformed(java.awt.event.ActionEvent evt) {
