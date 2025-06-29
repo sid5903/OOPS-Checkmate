@@ -39,9 +39,9 @@ public class Table {
         this.mainMenu = new MainMenu();
         this.playerSelectionPanel = new PlayerSelectionPanel();
         this.client = new Client(this);
-        this.client.Connect("172.20.32.65", 4000);
+        this.client.Connect("192.168.41.88", 4000);
         if (this.client.socket == null) {
-            JOptionPane.showMessageDialog(null, "Servera bağlanılamadı");
+            JOptionPane.showMessageDialog(null, "Server is not running");
             System.exit(0);
         }
         createMainMenu();

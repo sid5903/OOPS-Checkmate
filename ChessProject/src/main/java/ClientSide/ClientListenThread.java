@@ -44,9 +44,14 @@ public class ClientListenThread extends Thread {
                             this.client.game.setOpponentName(opponentName);
                         }
                         this.client.isPaired = true;
-                        this.client.game.getMainMenu().getPlayBTN().setEnabled(true);
-                        this.client.game.getMainMenu().getPlayBTN().setText("Start Game");
-                        this.client.game.getMainMenu().getInfoLBL().setText("Matched. Click To Start Game");
+                        
+                        // Only update main menu if we're not loading a game
+                        // (when loading a game, the game panel will be created directly)
+                        if (this.client.game.getMainMenu() != null && this.client.game.getMainMenu().getPlayBTN() != null) {
+                            this.client.game.getMainMenu().getPlayBTN().setEnabled(true);
+                            this.client.game.getMainMenu().getPlayBTN().setText("Start Game");
+                            this.client.game.getMainMenu().getInfoLBL().setText("Matched. Click To Start Game");
+                        }
                         break;
                         
                     case MATCHED:
@@ -185,10 +190,9 @@ public class ClientListenThread extends Thread {
                         // Handle load game with pairing confirmation
                         if (msg.content instanceof String) {
                             String message = (String) msg.content;
-                            JOptionPane.showMessageDialog(null, 
-                                message,
-                                "Load Game with Pairing", 
-                                JOptionPane.INFORMATION_MESSAGE);
+                            // Don't show dialog here as user already saw instructions
+                            // Just log the message for debugging
+                            System.out.println("Load game with pairing: " + message);
                         }
                         break;
 

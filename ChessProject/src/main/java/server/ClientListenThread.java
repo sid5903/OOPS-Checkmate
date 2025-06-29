@@ -135,10 +135,8 @@ public class ClientListenThread extends Thread {
                                     this.client.pairingThread.start();
                                 }
                                 
-                                // Send confirmation
-                                Message confirmMsg = new Message(Message.MessageTypes.LOAD_GAME_WITH_PAIRING);
-                                confirmMsg.content = "Waiting for another player to join...";
-                                this.client.Send(confirmMsg);
+                                // Don't send confirmation message - user already saw instructions
+                                System.out.println("Client " + this.client.getPlayerName() + " waiting to pair for game: " + saveName);
                             } else {
                                 // Send error message if game not found
                                 Message errorMsg = new Message(Message.MessageTypes.LOAD_GAME_WITH_PAIRING);
