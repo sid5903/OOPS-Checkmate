@@ -210,7 +210,7 @@ public class Table {
         }    
         
         JPanel boardWrapper = new JPanel(new java.awt.FlowLayout(java.awt.FlowLayout.CENTER));
-        boardWrapper.setBackground(new Color(15, 15, 15));
+        boardWrapper.setBackground(new Color(43, 43, 43));
         boardWrapper.setBorder(javax.swing.BorderFactory.createEmptyBorder(5, 0, 0, 0)); // Top offset: 100px
         boardWrapper.add(this.boardPanel);
 
