@@ -7,9 +7,11 @@
 package server;
 
 import Messages.Message;
+import Messages.GameState;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.concurrent.Semaphore;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -27,6 +29,9 @@ public class Server {
     public ListenConnectionRequestThread listenConnectionRequestThread;
     public ClientRemovingControlThread removingControlThread;
     public static ArrayList<SClient> clients;
+    
+    // Storage for saved games
+    public static HashMap<String, GameState> savedGames = new HashMap<>();
 
     //lock mechanism for pairing thread. One client can match with one client at the same time. So we use the lock mechanism to provide
     //other clients not try to pair this client at the same time.
@@ -49,6 +54,22 @@ public class Server {
     public void ListenClientConnectionRequests() {
         this.listenConnectionRequestThread.start();
         this.removingControlThread.start(); // Start the removing control thread
+    }
+    
+    // Method to save a game
+    public static void saveGame(GameState gameState) {
+        savedGames.put(gameState.getSaveName(), gameState);
+        System.out.println("Game saved: " + gameState.getSaveName());
+    }
+    
+    // Method to get a saved game
+    public static GameState getSavedGame(String saveName) {
+        return savedGames.get(saveName);
+    }
+    
+    // Method to get all saved game names
+    public static ArrayList<String> getSavedGameNames() {
+        return new ArrayList<>(savedGames.keySet());
     }
 
     public static void SendMessage(SClient client, Message message) {

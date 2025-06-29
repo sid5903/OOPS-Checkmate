@@ -6,6 +6,7 @@
 package server;
 
 import Messages.Message;
+import Messages.GameState;
 import chess_game.Pieces.Team;
 
 /**
@@ -65,6 +66,26 @@ public class ClientPairingThread extends Thread {
                                 pairClientStartMessage.content = (Object)Team.BLACK;
                                 Server.SendMessage(this.client, clientStartMessage);
                                 Server.SendMessage(chosenPair, pairClientStartMessage);
+                                
+                                // Check if either client wants to load a game
+                                if (this.client.loadGameName != null || chosenPair.loadGameName != null) {
+                                    String gameToLoad = this.client.loadGameName != null ? this.client.loadGameName : chosenPair.loadGameName;
+                                    
+                                    // Load the game for both clients
+                                    Messages.GameState loadedGame = Server.getSavedGame(gameToLoad);
+                                    if (loadedGame != null) {
+                                        Message loadGameMsg = new Message(Message.MessageTypes.LOAD_GAME);
+                                        loadGameMsg.content = loadedGame;
+                                        Server.SendMessage(this.client, loadGameMsg);
+                                        Server.SendMessage(chosenPair, loadGameMsg);
+                                        
+                                        System.out.println("Loaded game: " + gameToLoad + " for paired players");
+                                    }
+                                    
+                                    // Clear the load game names
+                                    this.client.loadGameName = null;
+                                    chosenPair.loadGameName = null;
+                                }
                                 
                                 System.out.println("Paired: " + this.client.getPlayerName() + " (WHITE) vs " + client.getPlayerName() + " (BLACK)");
                                 break;

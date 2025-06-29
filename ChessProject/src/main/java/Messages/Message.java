@@ -17,7 +17,7 @@ public class Message implements java.io.Serializable {
     public static enum MessageTypes {
         MATCHED, START, MOVE, END, PAIRING, CHECK, LEAVE, CHAT, 
         PLAYER_LIST, PLAY_REQUEST, PLAY_RESPONSE, REQUEST_DENIED,
-        SAVE_GAME, LOAD_GAME
+        SAVE_GAME, LOAD_GAME, GET_SAVED_GAMES, LOAD_GAME_WITH_PAIRING
     };
 
     public MessageTypes type;

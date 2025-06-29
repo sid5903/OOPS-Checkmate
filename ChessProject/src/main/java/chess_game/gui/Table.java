@@ -100,15 +100,9 @@ public class Table {
             @Override
             public void actionPerformed(ActionEvent e) {
                 playerName = mainMenu.getPlayerName();
-                // For now, we'll show a simple message. In a full implementation,
-                // this would show a list of saved games to choose from.
-                JOptionPane.showMessageDialog(
-                    gameFrame,
-                    "Load Game functionality will be implemented in the next version.\n" +
-                    "This would show a list of saved games to choose from.",
-                    "Load Game",
-                    JOptionPane.INFORMATION_MESSAGE
-                );
+                // Request list of saved games from server
+                Message msg = new Message(Message.MessageTypes.GET_SAVED_GAMES);
+                client.Send(msg);
             }
         });
         
@@ -200,6 +194,37 @@ public class Table {
         setupChatHandlers();
         
         if(this.client.getTeam() == Team.WHITE) {
+            this.bottomGameMenu.getTurnLBL().setText("Your Turn");
+            this.bottomGameMenu.getTurnLBL().setForeground(Color.GREEN);
+        } else {
+            this.bottomGameMenu.getTurnLBL().setText("Enemy Turn");
+            this.bottomGameMenu.getTurnLBL().setForeground(Color.RED);
+        }    
+        
+        this.gameFrame.add(this.boardPanel, BorderLayout.CENTER);
+        this.gameFrame.add(this.bottomGameMenu, BorderLayout.PAGE_END);
+        this.gameFrame.revalidate();
+        this.gameFrame.repaint();
+        this.gameFrame.setVisible(true);
+    }
+
+    public void createGamePanelWithBoard(Board loadedBoard) {
+        this.gameFrame.getContentPane().removeAll();
+        this.chessBoard = loadedBoard;
+        this.boardPanel = new BoardPanel(this.chessBoard, this.client);
+        this.bottomGameMenu = new InGameBottomMenu();
+        
+        this.bottomGameMenu.getPlayersColorLBL().setText("Your color is " + this.client.getTeam().toString());
+        this.bottomGameMenu.setPlayerName(playerName);
+        
+        if (opponentName != null) {
+            this.bottomGameMenu.setOpponentName(opponentName);
+        }
+        
+        setupChatHandlers();
+        
+        // Set turn indicator based on the loaded game state
+        if(this.client.getTeam() == this.chessBoard.getCurrentPlayer().getTeam()) {
             this.bottomGameMenu.getTurnLBL().setText("Your Turn");
             this.bottomGameMenu.getTurnLBL().setForeground(Color.GREEN);
         } else {
@@ -334,6 +359,73 @@ public class Table {
         Message msg = new Message(Message.MessageTypes.PLAY_RESPONSE);
         msg.content = request;
         client.Send(msg);
+    }
+
+    public void showLoadGameDialog(ArrayList<String> savedGameNames) {
+        if (savedGameNames.isEmpty()) {
+            JOptionPane.showMessageDialog(
+                gameFrame,
+                "No saved games found.\n\nTo save a game:\n1. Start a new game\n2. Click 'Save Game' during gameplay\n3. Enter a name for your save",
+                "Load Game",
+                JOptionPane.INFORMATION_MESSAGE
+            );
+            return;
+        }
+        
+        // Create a dialog with a dropdown to select the game
+        String[] gameNames = savedGameNames.toArray(new String[0]);
+        String selectedGame = (String) JOptionPane.showInputDialog(
+            gameFrame,
+            "Select a saved game to load:",
+            "Load Game",
+            JOptionPane.QUESTION_MESSAGE,
+            null,
+            gameNames,
+            gameNames[0]
+        );
+        
+        if (selectedGame != null) {
+            // Ask user if they want to load in multiplayer mode
+            int choice = JOptionPane.showConfirmDialog(
+                gameFrame,
+                "Do you want to load this game in multiplayer mode?\n\n" +
+                "Yes = Load with another player (multiplayer)\n" +
+                "No = Load alone (single player)",
+                "Load Game Mode",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.QUESTION_MESSAGE
+            );
+            
+            if (choice == JOptionPane.YES_OPTION) {
+                // Load in multiplayer mode - first establish pairing
+                JOptionPane.showMessageDialog(
+                    gameFrame,
+                    "Multiplayer Load Mode:\n\n" +
+                    "1. You will be paired with another player\n" +
+                    "2. The other player should use 'Quick Match' or 'Select Player'\n" +
+                    "3. Once paired, the saved game will load automatically\n\n" +
+                    "Click OK to start pairing...",
+                    "Multiplayer Load",
+                    JOptionPane.INFORMATION_MESSAGE
+                );
+                
+                // Send load game with pairing request
+                Message loadMsg = new Message(Message.MessageTypes.LOAD_GAME_WITH_PAIRING);
+                loadMsg.content = selectedGame;
+                client.Send(loadMsg);
+            } else {
+                // Load in single player mode
+                Message loadMsg = new Message(Message.MessageTypes.LOAD_GAME);
+                loadMsg.content = selectedGame;
+                client.Send(loadMsg);
+            }
+        }
+    }
+
+    public void handleGameLoaded() {
+        // This method can be called when a game is successfully loaded
+        // to perform any additional setup if needed
+        System.out.println("Game loaded successfully");
     }
 
     // Getters and setters

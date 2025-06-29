@@ -163,6 +163,32 @@ public class ClientListenThread extends Thread {
                             GameState loadedGame = (GameState) msg.content;
                             // Load the game state
                             loadGameState(loadedGame);
+                        } else if (msg.content instanceof String) {
+                            // Handle error message
+                            String errorMsg = (String) msg.content;
+                            JOptionPane.showMessageDialog(null, 
+                                errorMsg,
+                                "Load Error", 
+                                JOptionPane.ERROR_MESSAGE);
+                        }
+                        break;
+                        
+                    case GET_SAVED_GAMES:
+                        // Handle list of saved games
+                        if (msg.content instanceof ArrayList) {
+                            ArrayList<String> savedGameNames = (ArrayList<String>) msg.content;
+                            this.client.game.showLoadGameDialog(savedGameNames);
+                        }
+                        break;
+                        
+                    case LOAD_GAME_WITH_PAIRING:
+                        // Handle load game with pairing confirmation
+                        if (msg.content instanceof String) {
+                            String message = (String) msg.content;
+                            JOptionPane.showMessageDialog(null, 
+                                message,
+                                "Load Game with Pairing", 
+                                JOptionPane.INFORMATION_MESSAGE);
                         }
                         break;
 
@@ -208,30 +234,15 @@ public class ClientListenThread extends Thread {
     
     private void loadGameState(GameState gameState) {
         try {
-            // Update the game board with the loaded state
-            this.client.game.setChessBoard(gameState.getBoard());
+            // Set client as paired since we're loading a saved game
+            this.client.isPaired = true;
             
-            // Update player names
+            // Update player names first
             this.client.game.setPlayerName(gameState.getPlayer1Name());
             this.client.game.setOpponentName(gameState.getPlayer2Name());
             
-            // Update the board panel
-            this.client.game.getBoardPanel().updateBoardGUI(gameState.getBoard());
-            
-            // Update the bottom menu
-            if (this.client.game.getBottomGameMenu() != null) {
-                this.client.game.getBottomGameMenu().setPlayerName(gameState.getPlayer1Name());
-                this.client.game.getBottomGameMenu().setOpponentName(gameState.getPlayer2Name());
-                
-                // Update turn indicator
-                if (gameState.getCurrentPlayerTeam() == this.client.getTeam()) {
-                    this.client.game.getBottomGameMenu().getTurnLBL().setText("Your Turn");
-                    this.client.game.getBottomGameMenu().getTurnLBL().setForeground(Color.GREEN);
-                } else {
-                    this.client.game.getBottomGameMenu().getTurnLBL().setText("Enemy Turn");
-                    this.client.game.getBottomGameMenu().getTurnLBL().setForeground(Color.RED);
-                }
-            }
+            // Create game panel with the loaded board
+            this.client.game.createGamePanelWithBoard(gameState.getBoard());
             
             JOptionPane.showMessageDialog(null, 
                 "Game loaded successfully: " + gameState.getSaveName(),

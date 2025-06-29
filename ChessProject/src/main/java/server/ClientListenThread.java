@@ -78,14 +78,73 @@ public class ClientListenThread extends Thread {
                             // Forward the save request to the paired client
                             this.client.pair.Send(msg);
                         }
-                        // Store the game state on the server (could be saved to file/database)
-                        System.out.println("Game saved: " + msg.content);
+                        // Store the game state on the server
+                        if (msg.content instanceof Messages.GameState) {
+                            Messages.GameState gameState = (Messages.GameState) msg.content;
+                            Server.saveGame(gameState);
+                        }
                         break;
                         
                     case LOAD_GAME:
                         // Handle load game request
-                        if (this.client.isPaired && this.client.pair != null) {
-                            this.client.pair.Send(msg);
+                        if (msg.content instanceof String) {
+                            String saveName = (String) msg.content;
+                            Messages.GameState loadedGame = Server.getSavedGame(saveName);
+                            if (loadedGame != null) {
+                                // Send the loaded game back to the client
+                                Message loadResponse = new Message(Message.MessageTypes.LOAD_GAME);
+                                loadResponse.content = loadedGame;
+                                this.client.Send(loadResponse);
+                                
+                                // If client is paired, also send to the paired client
+                                if (this.client.isPaired && this.client.pair != null) {
+                                    this.client.pair.Send(loadResponse);
+                                }
+                            } else {
+                                // Send error message if game not found
+                                Message errorMsg = new Message(Message.MessageTypes.LOAD_GAME);
+                                errorMsg.content = "Game not found: " + saveName;
+                                this.client.Send(errorMsg);
+                            }
+                        }
+                        break;
+                        
+                    case GET_SAVED_GAMES:
+                        // Send list of saved games to client
+                        Message savedGamesMsg = new Message(Message.MessageTypes.GET_SAVED_GAMES);
+                        savedGamesMsg.content = Server.getSavedGameNames();
+                        this.client.Send(savedGamesMsg);
+                        break;
+                        
+                    case LOAD_GAME_WITH_PAIRING:
+                        // Handle load game with pairing request
+                        if (msg.content instanceof String) {
+                            String saveName = (String) msg.content;
+                            Messages.GameState loadedGame = Server.getSavedGame(saveName);
+                            if (loadedGame != null) {
+                                // Set this client to want to pair for loading
+                                this.client.isWantToPair = true;
+                                this.client.setPlayerName(loadedGame.getPlayer1Name());
+                                
+                                // Store the game name to load after pairing
+                                this.client.loadGameName = saveName;
+                                
+                                // Start pairing thread if not already running
+                                if (!this.client.pairingThread.isAlive()) {
+                                    this.client.pairingThread = new ClientPairingThread(this.client);
+                                    this.client.pairingThread.start();
+                                }
+                                
+                                // Send confirmation
+                                Message confirmMsg = new Message(Message.MessageTypes.LOAD_GAME_WITH_PAIRING);
+                                confirmMsg.content = "Waiting for another player to join...";
+                                this.client.Send(confirmMsg);
+                            } else {
+                                // Send error message if game not found
+                                Message errorMsg = new Message(Message.MessageTypes.LOAD_GAME_WITH_PAIRING);
+                                errorMsg.content = "Game not found: " + saveName;
+                                this.client.Send(errorMsg);
+                            }
                         }
                         break;
                         

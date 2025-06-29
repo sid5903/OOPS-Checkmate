@@ -22,6 +22,7 @@ public class SClient {
     public ClientPairingThread pairingThread;
     public String playerName;
     public String clientId;
+    public String loadGameName;
     
     public SClient(Socket socket) {
         try {
